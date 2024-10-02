@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载器设置</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --border-color: #bdc3c7;
+            --hover-color: #2980b9;
+            --delete-color: #e74c3c;
+            --delete-hover-color: #c0392b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        .downloader-select {
+            margin-bottom: 2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        select, input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            background-color: var(--delete-color);
+            margin-left: 1rem;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--delete-hover-color);
+        }
+
+        .floating-menu {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .menu-toggle {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background-color: #27ae60;
+            transform: scale(1.1);
+        }
+
+        .menu-content {
+            display: none;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .menu-content.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .menu-content a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .menu-content a:hover {
+            background-color: var(--background-color);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fas fa-download"></i> 下载器设置</h2>
+        
+        <div class="downloader-select">
+            <label for="downloaderSelect">选择下载器:</label>
+            <select id="downloaderSelect" onchange="fillDownloaderDetails()">
+                <option value="">请选择下载器</option>
+                {% for downloader in existing_downloaders %}
+                    <option  
+                        value="{{ downloader.name }}"
+                        data-id="{{ downloader.id }}"
+                        data-name="{{ downloader.name }}" 
+                        data-type="{{ downloader.type }}" 
+                        data-host="{{ downloader.connection_info.host }}" 
+                        data-port="{{ downloader.connection_info.port }}" 
+                        data-username="{{ downloader.connection_info.username }}" 
+                        data-password="{{ downloader.connection_info.password }}" 
+                        data-torrent-folder="{{ downloader.torrent_folder }}">
+                        {{ downloader.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <form action="/submit_downloader" method="post">
+            <input type="hidden" id="id" name="id">
+            <input type="hidden" id="formAction" name="formAction" value="add">
+
+            <label for="name">下载器名称:</label>
+            <input type="text" id="name" name="name" required placeholder="输入下载器名称">
+
+            <label for="type">下载器类型:</label>
+            <select id="type" name="type" required>
+                <option value="qbittorrent">qBittorrent</option>
+                <option value="transmission">Transmission</option>
+                <option value="deluge">Deluge</option>
+            </select>
+
+            <label for="host">Host:</label>
+            <input type="text" id="host" name="host" required placeholder="如: localhost 或 IP 地址">
+
+            <label for="port">Port:</label>
+            <input type="number" id="port" name="port" required placeholder="如: 8080">
+
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="输入用户名">
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="输入密码">
+
+            <label for="torrent_folder">Torrent 文件夹:</label>
+            <input type="text" id="torrent_folder" name="torrent_folder" required placeholder="如: /path/to/torrents">
+
+            <div>
+                <button type="submit" class="btn"><i class="fas fa-save"></i> 保存设置</button>
+                <button type="button" class="btn btn-delete" onclick="deleteDownloader()"><i class="fas fa-trash-alt"></i> 删除下载器</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="floating-menu">
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        <div class="menu-content" id="menuContent">
+            <a href="/logs"><i class="fas fa-clipboard-list"></i> 日志</a>
+            <a href="/downloader"><i class="fas fa-cog"></i> 下载器设置</a>
+            <a href="/"><i class="fas fa-home"></i> 首页</a>
+        </div>
+    </div>
+
+    <script>
+        function fillDownloaderDetails() {
+            const select = document.getElementById('downloaderSelect');
+            const selectedOption = select.options[select.selectedIndex];
+         
+            document.getElementById('id').value = selectedOption.getAttribute('data-id') || '';
+            document.getElementById('name').value = selectedOption.getAttribute('data-name') || '';
+            document.getElementById('type').value = selectedOption.getAttribute('data-type') || '';
+            document.getElementById('host').value = selectedOption.getAttribute('data-host') || '';
+            document.getElementById('port').value = selectedOption.getAttribute('data-port') || '';
+            document.getElementById('username').value = selectedOption.getAttribute('data-username') || '';
+            document.getElementById('password').value = selectedOption.getAttribute('data-password') || '';
+            document.getElementById('torrent_folder').value = selectedOption.getAttribute('data-torrent-folder') || '';
+
+            document.getElementById('formAction').value = selectedOption.getAttribute('data-id') ? 'update' : 'add';
+        }
+
+        function deleteDownloader() {
+            const select = document.getElementById('downloaderSelect');
+            const selectedOption = select.options[select.selectedIndex];
+         
+            if (!selectedOption || selectedOption.value === "") {
+                alert('请先选择一个下载器');
+                return;
+            }
+
+            const downloaderId = selectedOption.getAttribute('data-id');
+            const downloaderName = selectedOption.getAttribute('data-name');
+         
+            if (!downloaderId) {
+                alert('选择的下载器没有有效的 ID');
+                return;
+            }
+
+            if (confirm(`确定要删除下载器 "${downloaderName}" 吗？`)) {
+                fetch(`/delete_downloader/${downloaderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    alert(data.message || '下载器已成功删除');
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('删除请求失败:', error);
+                    alert(`删除失败: ${error.message}。请重试或联系管理员。`);
+                });
+            }
+        }
+
+        function toggleMenu() {
+            const menuContent = document.getElementById('menuContent');
+            menuContent.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>

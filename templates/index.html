@@ -1,27 +1,300 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-    <title>Select Site</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站点管理</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5a623;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --hover-color: #3a7bd5;
+            --delete-color: #e74c3c;
+            --delete-hover-color: #c0392b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .site-list, form {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        select, input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        input[type="submit"], button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        input[type="submit"]:hover, button:hover {
+            background-color: var(--hover-color);
+        }
+
+        .btn-delete {
+            background-color: var(--delete-color);
+        }
+
+        .btn-delete:hover {
+            background-color: var(--delete-hover-color);
+        }
+
+        .floating-menu {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .menu-toggle {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-content {
+            display: none; /* Initially hidden */
+            background-color: white; 
+            border-radius: 4px; 
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
+			overflow:hidden; 
+			position:absolute; 
+			bottom :70px; 
+			right :0; 
+		}
+
+		.menu-content a { 
+			display:block; 
+			padding:.75rem; 
+			color :var(--text-color); 
+			text-decoration:none; 
+			transition :background-color .3s ease; 
+		}
+
+		.menu-content a:hover { 
+			background-color :var(--background-color); 
+		}
+
+		.hidden { 
+			display:none; 
+		}
+
+		@media (max-width :600px) { 
+			.container { 
+				padding :1rem; 
+			} 
+		}
+    </style>
 </head>
 <body>
-    <div>
-      已配置站点：
-      {% for site in existing_sites %}
-            <a >{{ site.siteName }}</a>
-      {% endfor %}
-    </div>
-    <form method="POST" action="/submit">
-        <label for="site">选择站点:</label>
-        <select name="site">
-            {% for site in sites %}
-            <option value="{{ site.id }}">{{ site.siteName }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <label for="passkey">输入对应站点passkey:</label>
-        <input type="text" name="passkey" id="passkey">
-        <br>
-        <input type="submit" value="提交">
-    </form>
+    <div class="container">
+        <h2><i class="fas fa-cogs"></i> 已配置站点</h2>
+        
+        <div class="site-list">
+           <label for="siteSelect">选择站点:</label>
+           <select id="siteSelect" onchange="fillSiteDetails()">
+               <option value="">请选择站点</option>
+               {% for site in existing_sites %}
+                   <option value="{{ site.id }}" 
+                           data-sitename="{{ site.siteName }}" 
+                           data-siteurl="{{ site.siteUrl }}" 
+                           data-passkey="{{ site.passkey }}">
+                       {{ site.siteName }}
+                   </option>
+               {% endfor %}
+           </select>
+       </div>
+
+       <div id="modifySection" class="hidden">
+           <h2>修改站点信息</h2>
+           <form method="POST" action="/submit">
+               <label for="siteName">站点名称:</label>
+               <input type="text" name="siteName" id="siteName" required>
+
+               <label for="siteUrl">站点URL:</label>
+               <input type="text" name="siteUrl" id="siteUrl" required>
+
+               <label for="passkey">Passkey:</label>
+               <input type="text" name="passkey" id="passkey">
+
+               <input type="hidden" name="site" id="siteId">
+               <div>
+                   <input type="submit" value="提交修改">
+                   <button type="button" class="btn-delete" onclick="deletesites()">删除站点</button>
+               </div>
+           </form>
+       </div>
+
+       <h2>配置站点Passkey</h2>
+       <form method="POST" action="/submit">
+           <label for="site">选择站点:</label>
+           <select name="site">
+               {% for site in sites %}
+                   <option value="{{ site.id }}">{{ site.siteName }}</option>
+               {% endfor %}
+           </select>
+
+           <label for="passkey">输入对应站点Passkey:</label>
+           <input type="text" name="passkey" id="passkey">
+
+           <input type="submit" value="提交">
+       </form>
+
+       <h2>添加新站点</h2>
+       <form method="POST" action="/submit">
+           <label for="newSiteName">新站点名称:</label>
+           <input type="text" name="siteName" id="newSiteName" required>
+
+           <label for="newSiteUrl">新站点URL:</label>
+           <input type="text" name="siteUrl" id="newSiteUrl" placeholder="https://xxx.com/" required>
+
+           <label for="newPasskey">Passkey:</label>
+           <input type="text" name="passkey" id="newPasskey" required>
+
+           <input type="submit" value="添加站点">
+       </form>
+   </div>
+
+   <div class="floating-menu">
+       <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+       <div class="menu-content" id="menuContent">
+           <a href="/logs"><i class="fas fa-clipboard-list"></i> 日志</a>
+           <a href="/downloader"><i class="fas fa-cog"></i> 下载器设置</a>
+           <a href="/"><i class="fas fa-home"></i> 首页</a>
+       </div>
+   </div>
+
+   <script>
+       function toggleMenu() {
+           const menu = document.getElementById('menuContent');
+           menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+       }
+
+       function fillSiteDetails() {
+           const select = document.getElementById('siteSelect');
+           const selectedOption = select.options[select.selectedIndex];
+           const siteNameInput = document.getElementById('siteName');
+           const siteUrlInput = document.getElementById('siteUrl');
+           const passkeyInput = document.getElementById('passkey');
+           const siteIdInput = document.getElementById('siteId');
+
+           if (selectedOption.value) {
+               siteNameInput.value = selectedOption.getAttribute('data-sitename') || '';
+               siteUrlInput.value = selectedOption.getAttribute('data-siteurl') || '';
+               passkeyInput.value = selectedOption.getAttribute('data-passkey') || '';
+               siteIdInput.value = selectedOption.value;
+
+               document.getElementById('modifySection').classList.remove('hidden');
+           } else {
+               siteNameInput.value = '';
+               siteUrlInput.value = '';
+               passkeyInput.value = '';
+               siteIdInput.value = '';
+
+               document.getElementById('modifySection').classList.add('hidden');
+           }
+       }
+
+       function deletesites() {
+           const select = document.getElementById('siteSelect');
+           const selectedOption = select.options[select.selectedIndex];
+
+           if (!selectedOption || selectedOption.value === "") {
+               alert('请先选择一个站点');
+               return;
+           }
+
+           const siteId = selectedOption.value;
+           const siteName = selectedOption.getAttribute('data-sitename');
+
+           if (!siteId) {
+               alert('选择的站点没有有效的 ID');
+               return;
+           }
+
+           if (confirm(`确定要删除站点 "${siteName}" 吗？`)) {
+               fetch(`/delete_sites/${siteId}`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json'
+                   },
+                   body: JSON.stringify({ id: siteId })
+               })
+               .then(response => response.json())
+               .then(data => {
+                   if (data.error) {
+                       throw new Error(data.error);
+                   }
+                   alert(data.message || '站点已成功删除');
+                   window.location.reload();
+               })
+               .catch(error => {
+                   console.error('删除请求失败:', error);
+                   alert(`删除失败：${error.message}。请重试。`);
+               });
+           }
+       }
+   </script>
 </body>
 </html>

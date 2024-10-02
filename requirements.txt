@@ -1,5 +1,7 @@
 bencodepy==0.9.5
 Jinja2==3.1.2
-qbittorrent_api==2023.7.52
+qbittorrent_api
 Requests==2.31.0
-sanic==23.6.0
+sanic==24.6.0
+transmission-rpc
+deluge-client
